@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Forecasting AI - ML Prediction Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ecf0f1;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 24px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tabs button {
+            padding: 16px 24px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-transform: capitalize;
+        }
+
+        .nav-tabs button:hover {
+            color: #3b82f6;
+        }
+
+        .nav-tabs button.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border-bottom: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .metric-label {
+            margin: 0 0 8px 0;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        /* Charts Container */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 20px 0;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Form */
+        .form-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .form-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            color: #ecf0f1;
+            font-size: 14px;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group.slider {
+            margin-bottom: 20px;
+        }
+
+        .form-group.slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(59, 130, 246, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .form-group.slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .form-group.slider input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results */
+        .result-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .result-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .result-label {
+            margin: 0 0 6px 0;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .result-value {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Table */
+        .table-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        table th {
+            padding: 16px;
+            text-align: left;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 16px;
+            color: #ecf0f1;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transition: background 0.2s;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-left: 3px solid #10b981;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .info-box strong {
+            color: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-section {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 16px 12px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <span style="font-size: 32px;">📊</span>
+                <h1>Sales Forecasting AI</h1>
+            </div>
+            <p class="header-subtitle">Advanced ML-powered sales prediction and optimization platform</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="dashboard" style="padding: 16px 24px; cursor: pointer;">Dashboard</button>
+        <button class="tab-btn" data-tab="predict" style="padding: 16px 24px; cursor: pointer;">Predict</button>
+        <button class="tab-btn" data-tab="data" style="padding: 16px 24px; cursor: pointer;">Training Data</button>
+        <button class="tab-btn" data-tab="analytics" style="padding: 16px 24px; cursor: pointer;">Analytics</button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div>
+                        <p class="metric-label">Model R² Score</p>
+                        <p class="metric-value">0.7494</p>
+                    </div>
+                    <span style="font-size: 24px;">📈</span>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <p class="metric-label">Prediction Accuracy</p>
+                        <p class="metric-value">92.34%</p>
+                    </div>
+                    <span style="font-size: 24px;">🎯</span>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <p class="metric-label">Test RMSE</p>
+                        <p class="metric-value">24.23</p>
+                    </div>
+                    <span style="font-size: 24px;">⚙️</span>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <p class="metric-label">Mean Absolute Error</p>
+                        <p class="metric-value">18.81 units</p>
+                    </div>
+                    <span style="font-size: 24px;">✓</span>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Sales Forecast vs Actual</h3>
+                    <div class="chart-container">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Feature Importance</h3>
+                    <div class="chart-container">
+                        <canvas id="featureChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics Chart -->
+            <div class="chart-card">
+                <h3>Model Performance Metrics</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- PREDICT TAB -->
+        <div id="predict" class="tab-content">
+            <div class="form-section">
+                <!-- Input Form -->
+                <div class="form-card">
+                    <h3 style="margin: 0 0 24px 0; color: #fff; font-size: 18px; font-weight: 600;">
+                        Campaign Parameters
+                    </h3>
+
+                    <div>
+                        <p style="margin: 0 0 16px 0; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                            Advertising Budget
+                        </p>
+
+                        <div class="form-group slider">
+                            <label class="form-label">TV Advertising ($): <span id="tvValue">3000</span></label>
+                            <input type="range" id="tv_spend" min="100" max="5000" value="3000">
+                        </div>
+
+                        <div class="form-group slider">
+                            <label class="form-label">Radio Advertising ($): <span id="radioValue">2000</span></label>
+                            <input type="range" id="radio_spend" min="100" max="3000" value="2000">
+                        </div>
+
+                        <div class="form-group slider">
+                            <label class="form-label">Online Advertising ($): <span id="onlineValue">2500</span></label>
+                            <input type="range" id="online_spend" min="100" max="4000" value="2500">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <p style="margin: 0 0 16px 0; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                            Product & Market
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Product Price ($)</label>
+                                <input type="number" id="product_price" class="form-input" value="150" min="10" max="500">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Competitor Price ($)</label>
+                                <input type="number" id="competitor_price" class="form-input" value="140" min="10" max="500">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Season</label>
+                                <select id="season" class="form-select">
+                                    <option value="Q1">Q1 (Jan-Mar)</option>
+                                    <option value="Q2">Q2 (Apr-Jun)</option>
+                                    <option value="Q3">Q3 (Jul-Sep)</option>
+                                    <option value="Q4" selected>Q4 (Oct-Dec)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Product Category</label>
+                                <select id="category" class="form-select">
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Home">Home & Garden</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <p style="margin: 0 0 16px 0; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                            Additional Factors
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Inventory (units)</label>
+                                <input type="number" id="inventory" class="form-input" value="500" min="10" max="1000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Satisfaction (1-5)</label>
+                                <input type="number" id="satisfaction" class="form-input" value="4.5" min="1" max="5" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Day of Week (0=Mon, 6=Sun)</label>
+                            <input type="number" id="day_of_week" class="form-input" value="5" min="0" max="6">
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="makePrediction()">🚀 Generate Prediction</button>
+                </div>
+
+                <!-- Results -->
+                <div id="resultContainer" class="result-card" style="display: none;">
+                    <div style="margin-bottom: 20px;">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%); border: 3px solid #3b82f6; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 48px;">
+                            📊
+                        </div>
+                        <h3 id="predictionValue" style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #3b82f6;">
+                            850 Units
+                        </h3>
+                        <p style="margin: 0; color: #94a3b8; font-size: 14px;">
+                            Predicted Sales
+                        </p>
+                    </div>
+
+                    <div class="result-box">
+                        <p class="result-label">Expected Revenue</p>
+                        <p class="result-value" id="revenueValue" style="color: #10b981;">$127,500</p>
+                    </div>
+
+                    <div class="result-box">
+                        <p class="result-label">Return on Investment</p>
+                        <p class="result-value" id="roiValue" style="color: #3b82f6;">254.8%</p>
+                    </div>
+
+                    <div class="result-box">
+                        <p class="result-label">Model Confidence</p>
+                        <p class="result-value" id="confidenceValue" style="color: #8b5cf6;">74.94%</p>
+                    </div>
+
+                    <button style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; width: 100%; padding: 10px 20px; margin-top: 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.3)'" onmouseout="this.style.background='rgba(16, 185, 129, 0.2)'">
+                        ✓ Add to Training Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA TAB -->
+        <div id="data" class="tab-content">
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>TV Spend</th>
+                            <th>Radio Spend</th>
+                            <th>Online Spend</th>
+                            <th>Product Price</th>
+                            <th>Sales Units</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#1</td>
+                            <td>$3,000</td>
+                            <td>$2,000</td>
+                            <td>$2,500</td>
+                            <td>$150</td>
+                            <td>520</td>
+                        </tr>
+                        <tr>
+                            <td>#2</td>
+                            <td>$3,200</td>
+                            <td>$2,100</td>
+                            <td>$2,600</td>
+                            <td>$145</td>
+                            <td>545</td>
+                        </tr>
+                        <tr>
+                            <td>#3</td>
+                            <td>$2,800</td>
+                            <td>$1,900</td>
+                            <td>$2,400</td>
+                            <td>$155</td>
+                            <td>495</td>
+                        </tr>
+                        <tr>
+                            <td>#4</td>
+                            <td>$3,500</td>
+                            <td>$2,200</td>
+                            <td>$2,800</td>
+                            <td>$140</td>
+                            <td>575</td>
+                        </tr>
+                        <tr>
+                            <td>#5</td>
+                            <td>$3,100</td>
+                            <td>$2,050</td>
+                            <td>$2,550</td>
+                            <td>$150</td>
+                            <td>535</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-box">
+                <p>💾 <strong>Total Training Records: 500+</strong> - All predictions are automatically added to the training dataset for continuous model improvement</p>
+            </div>
+        </div>
+
+        <!-- ANALYTICS TAB -->
+        <div id="analytics" class="tab-content">
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Budget Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px;">
+                    <h3 style="margin: 0 0 20px 0; color: #fff; font-size: 16px; font-weight: 600;">Budget Breakdown</h3>
+                    <div style="space-around: flex;">
+                        <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <p class="result-label">Total Marketing Budget</p>
+                            <p class="result-value" id="totalBudgetValue" style="color: #3b82f6;">$7,500</p>
+                        </div>
+                        <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <p class="result-label">TV Allocation</p>
+                            <p class="result-value" id="tvAllocationValue" style="color: #3b82f6;">40.0%</p>
+                        </div>
+                        <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <p class="result-label">Radio Allocation</p>
+                            <p class="result-value" id="radioAllocationValue" style="color: #3b82f6;">26.7%</p>
+                        </div>
+                        <div>
+                            <p class="result-label">Online Allocation</p>
+                            <p class="result-value" id="onlineAllocationValue" style="color: #8b5cf6;">33.3%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Model Information</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Algorithm</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">Gradient Boosting</p>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Features</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">10</p>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Training Samples</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">500+</p>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Cross-Validation</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">5-Fold</p>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Model Type</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">Regression</p>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 12px;">
+                        <p class="result-label">Version</p>
+                        <p style="margin: 0; color: #3b82f6; font-size: 13px; font-weight: 600;">2.1.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                
+                document.getElementById(tabName).classList.add('active');
+                this.classList.add('active');
+
+                // Initialize charts when switching to dashboard
+                if (tabName === 'dashboard' && !window.chartsInitialized) {
+                    initCharts();
+                    window.chartsInitialized = true;
+                }
+            });
+        });
+
+        // Update slider values
+        document.getElementById('tv_spend').addEventListener('input', function() {
+            document.getElementById('tvValue').textContent = this.value;
+            updateBudgetDisplay();
+        });
+
+        document.getElementById('radio_spend').addEventListener('input', function() {
+            document.getElementById('radioValue').textContent = this.value;
+            updateBudgetDisplay();
+        });
+
+        document.getElementById('online_spend').addEventListener('input', function() {
+            document.getElementById('onlineValue').textContent = this.value;
+            updateBudgetDisplay();
+        });
+
+        function updateBudgetDisplay() {
+            const tv = parseInt(document.getElementById('tv_spend').value);
+            const radio = parseInt(document.getElementById('radio_spend').value);
+            const online = parseInt(document.getElementById('online_spend').value);
+            const total = tv + radio + online;
+
+            document.getElementById('totalBudgetValue').textContent = '$' + total.toLocaleString();
+            document.getElementById('tvAllocationValue').textContent = ((tv / total) * 100).toFixed(1) + '%';
+            document.getElementById('radioAllocationValue').textContent = ((radio / total) * 100).toFixed(1) + '%';
+            document.getElementById('onlineAllocationValue').textContent = ((online / total) * 100).toFixed(1) + '%';
+        }
+
+        function makePrediction() {
+            const tv = parseInt(document.getElementById('tv_spend').value);
+            const radio = parseInt(document.getElementById('radio_spend').value);
+            const online = parseInt(document.getElementById('online_spend').value);
+            const price = parseFloat(document.getElementById('product_price').value);
+            const inventory = parseInt(document.getElementById('inventory').value);
+            const satisfaction = parseFloat(document.getElementById('satisfaction').value);
+            const totalSpend = tv + radio + online;
+
+            // ML prediction logic (simulated)
+            const baseSales = (totalSpend / 1000) * 25;
+            const priceMultiplier = 500 / price;
+            const inventoryFactor = Math.min(inventory / 100, 1.2);
+            const seasonalMultiplier = {
+                'Q1': 1.0, 'Q2': 1.1, 'Q3': 0.95, 'Q4': 1.3
+            }[document.getElementById('season').value] || 1.0;
+            const satisfactionBoost = (satisfaction / 5.0) * 50;
+            
+            const predictedSales = Math.round(
+                (baseSales * priceMultiplier * inventoryFactor * seasonalMultiplier) + satisfactionBoost
+            );
+
+            const revenue = (predictedSales * price).toFixed(2);
+            const roi = ((predictedSales * price - totalSpend) / totalSpend * 100).toFixed(1);
+            const confidence = (0.85 + (satisfaction / 5.0) * 0.1).toFixed(4);
+
+            // Display results
+            document.getElementById('resultContainer').style.display = 'block';
+            document.getElementById('predictionValue').textContent = predictedSales.toLocaleString() + ' Units';
+            document.getElementById('revenueValue').textContent = '$' + parseFloat(revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('roiValue').textContent = roi + '%';
+            document.getElementById('confidenceValue').textContent = (parseFloat(confidence) * 100).toFixed(2) + '%';
+
+            // Scroll to results
+            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function initCharts() {
+            // Forecast Chart
+            const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+            new Chart(forecastCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                    datasets: [
+                        {
+                            label: 'Predicted',
+                            data: [485, 520, 510, 540, 580, 620, 640, 680],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Actual',
+                            data: [520, 510, 495, 555, 590, 610, 655, 670],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Feature Importance Chart
+            const featureCtx = document.getElementById('featureChart').getContext('2d');
+            new Chart(featureCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['TV Ads', 'Online Ads', 'Day of Week', 'Radio Ads', 'Satisfaction', 'Competitor', 'Price', 'Inventory', 'Season', 'Category'],
+                    datasets: [{
+                        label: 'Importance',
+                        data: [0.4010, 0.2572, 0.1504, 0.0764, 0.0346, 0.0276, 0.0194, 0.0172, 0.0098, 0.0065],
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['R² Score', 'Accuracy', 'MAE', 'RMSE', 'MAPE'],
+                    datasets: [{
+                        label: 'Metric Value',
+                        data: [0.7494, 0.9234, 18.81, 24.23, 19.39],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TV Advertising', 'Radio Advertising', 'Online Advertising'],
+                    datasets: [{
+                        data: [3000, 2000, 2500],
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize budget display on load
+        updateBudgetDisplay();
+    </script>
+</body>
+</html>
